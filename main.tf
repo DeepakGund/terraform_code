@@ -2,6 +2,22 @@ provider "aws" {
   region = "us-west-2"
 }
 
+#Terraform_version
+terraform {
+  required_version = "~> 1.9.0"
+}
+
+
+#AWS_Plugins 
+terraform {
+  required_providers {
+    aws = {
+      source = "hashicorp/aws"
+      version = ">5.76.0"
+    }
+  }
+}
+
 locals {
   env = "Terraform"
 }
