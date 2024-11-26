@@ -1,37 +1,31 @@
-provider "aws" {
-  region = "us-west-2"
+  rsa_bits  = 4096  # Specify the key size (e.g., 4096 bits for a strong key)
 }
 
-#Terraform_version
-terraform {
-  required_version = "~> 1.9.0"
+# Save the private key to a local file in PEM format
+resource "local_file" "pem_key_file" {
+  filename = "deepak.pem"  # File will be created in the current directory with the new name
+  content  = tls_private_key.rsa_key.private_key_pem  # Correct resource reference
+}
+
+# (Optional) Output the private key for verification (avoid exposing sensitive data)
+output "private_key_pem" {
+  value     = tls_private_key.rsa_key.private_key_pem  # Correct resource reference
+  sensitive = true
 }
 
 
-#AWS_Plugins 
-terraform {
-  required_providers {
-    aws = {
-      source = "hashicorp/aws"
-      version = ">5.76.0"
-    }
-  }
+output "abc" {
+  value = aws_instance.ec2[1].public_ip
 }
 
-locals {
-  env = "Terraform"
-}
+[root@ip-172-31-8-180 git]# vim main.tf
 
-# instance_type
-variable "instance_types" {
-type = list(string)
-default = ["t2.micro", "t2.medium", "t2.small"]
-}
-
-# VPC
-resource "aws_vpc" "vpc" {
-  cidr_block = "10.10.0.0/16"
-  tags = {
+[3]+  Stopped                 vim main.tf
+[root@ip-172-31-8-180 git]# ls
+deepak.pem  main.tf  terraform.tfstate  terraform.tfstate.backup
+[root@ip-172-31-8-180 git]# bash
+[root@ip-172-31-8-180 git]# vim main.tf
+tags = {
     Name = "${local.env}-VPC"
   }
 }
@@ -46,32 +40,33 @@ resource "aws_subnet" "subnet" {
 resource "aws_instance" "ec2" {
   count         = length(var.instance_types)
   subnet_id     = aws_subnet.subnet.id
-  ami           = "ami-01b4a58555824692b"
+  ami           = "ami-022b9b4e935404526"
   instance_type = tolist(var.instance_types)[count.index]
   tags = {
     Name = "${local.env}-Server-${count.index + 1}"
   }
 }
 
-
 # Generate RSA private key
-resource "tls_private_key" "rsa_key" { 
+resource "tls_private_key" "rsa_key" {
   algorithm = "RSA"
+  rsa_bits  = 4096  # Specify the key size (e.g., 4096 bits for a strong key)
 }
 
 # Save the private key to a local file in PEM format
 resource "local_file" "pem_key_file" {
-  filename = "rsa_private_key.pem" # File will be created in the current directory
+  filename = "deepak.pem"  # File will be created in the current directory with the new name
   content  = tls_private_key.rsa_key.private_key_pem 
 }
 
 # (Optional) Output the private key for verification (avoid exposing sensitive data)
 output "private_key_pem" {
-  value     = tls_private_key.rsa_key.private_key_pem 
+  value     = tls_private_key.rsa_key.private_key_pem  
   sensitive = true
 }
 
 
-output "Public_ips" {
-  value = aws_instance.ec2.public_ip
+output "abc" {
+  value = aws_instance.ec2[1].public_ip
 }
+
