@@ -53,7 +53,6 @@ resource "aws_instance" "ec2" {
   }
 }
 
-
-output "abc" {
-  value = aws_instance.ec2
+output "Public_ips" {
+  value = aws_instance.ec2.public_ip
 }
