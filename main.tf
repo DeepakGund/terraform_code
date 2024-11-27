@@ -66,6 +66,18 @@ output "private_key_pem" {
 }
 
 
+/*
+# Create a new Key Pair in AWS
+resource "aws_key_pair" "key-gen" {
+  key_name   = "terraform_gen-key"   # Name of the key in AWS
+  public_key = tls_public_key.rsa_key.public_key_openssh  # public key
+}
+
+key_name      = aws_key_pair.key-gen.key_name 
+
+*/
+
+
 output "abc" {
   value = aws_instance.ec2[1].public_ip
 }
