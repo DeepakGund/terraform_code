@@ -51,7 +51,6 @@ resource "aws_instance" "ec2" {
 # Generate RSA private key
 resource "tls_private_key" "rsa_key" {
   algorithm = "RSA"
-  rsa_bits  = 4096
 }
 
 # Save RSA private key locally
@@ -68,4 +67,22 @@ output "private_key_pem" {
 
 output "public_ip_second_instance" {
   value = aws_instance.ec2[1].public_ip # Outputs the public IP of the second instance
+}
+
+
+connection {
+type ="ssh"
+user = "ec2-user"
+private_key = file ("~/.ssh/us-west-o2.pem")
+
+provisioner "remote-exec" {
+inline [
+"sudo yum update -y"
+"sudo yum install git tree -y"
+"touch remote-exec.txt":wq
+
+]
+
+}
+
 }
