@@ -1,4 +1,3 @@
-# Specify AWS provider version
 terraform {
   required_providers {
     aws = {
@@ -8,21 +7,14 @@ terraform {
   }
 }
 
-# Local environment name
 locals {
   env = "Terraform"
 }
 
-# Instance types variable
 variable "instance_types" {
   type    = list(string)
   default = ["t3.micro", "t3.medium", "t3.small"]
 }
-
-
-
-
-
 
 # Create VPC
 resource "aws_vpc" "vpc" {
@@ -30,7 +22,7 @@ resource "aws_vpc" "vpc" {
   enable_dns_support   = true
   enable_dns_hostnames = true
   tags = {
-Name = "${local.env}-VPC"
+    Name = "${local.env}-VPC"
   }
 }
 
@@ -41,7 +33,7 @@ resource "aws_subnet" "public_subnet" {
   map_public_ip_on_launch = true
   availability_zone       = "us-west-2a"
   tags = {
-    Name = "${local.env}Public-Subnet"
+    Name = "${local.env}-Public-Subnet"
   }
 }
 
@@ -98,16 +90,31 @@ resource "aws_security_group" "allow_all_sg" {
   }
 }
 
-
 # EC2 Instances
 resource "aws_instance" "ec2" {
-  count         = length(var.instance_types) # Create instances based on instance_types list
-  subnet_id     = aws_subnet.subnet.id
-  ami           = "ami-022b9b4e935404526"
-  key_name      = "us-west-02" # Updated key pair name
-  instance_type = tolist(var.instance_types)[count.index]
+  count         = length(var.instance_types)
+  subnet_id     = aws_subnet.public_subnet.id
+  ami           = "ami-022b9b4e935404526" # Update AMI as needed
+  key_name      = "us-west-02"
+  instance_type = var.instance_types[count.index]
   tags = {
     Name = "${local.env}-Server-${count.index + 1}"
+  }
+
+  # Configure SSH access and install packages
+  connection {
+    type        = "ssh"
+    user        = "ec2-user"
+    host        = self.public_ip # Use the instance's public IP
+    private_key = file("~/.ssh/us-west-02.pem")
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "sudo yum update -y",
+      "sudo yum install git tree -y",
+      "touch remote-exec.txt"
+    ]
   }
 }
 
@@ -129,23 +136,5 @@ output "private_key_pem" {
 }
 
 output "public_ip_second_instance" {
-  value = aws_instance.ec2[1].public_ip # Outputs the public IP of the second instance
-}
-
-
-connection {
-type ="ssh"
-user = "ec2-user"
-private_key = file ("~/.ssh/us-west-o2.pem")
-
-provisioner "remote-exec" {
-inline [
-"sudo yum update -y"
-"sudo yum install git tree -y"
-"touch remote-exec.txt":wq
-
-]
-
-}
-
+  value = aws_instance.ec2[1].public_ip
 }
