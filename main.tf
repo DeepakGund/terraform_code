@@ -77,6 +77,22 @@ key_name      = aws_key_pair.key-gen.key_name
 
 */
 
+connection {
+type ="ssh"
+user = "ec2-user"
+private_key = file ("~/.ssh/us-west-o2.pem")
+
+provisioner "remote-exec" {
+inline [
+"sudo yum update -y"
+"sudo yum install git tree -y"
+"touch remote-exec.txt":wq
+
+]
+
+}
+
+}
 
 output "abc" {
   value = aws_instance.ec2[1].public_ip
