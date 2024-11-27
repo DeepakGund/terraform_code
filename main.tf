@@ -19,22 +19,85 @@ variable "instance_types" {
   default = ["t3.micro", "t3.medium", "t3.small"]
 }
 
-# VPC
+
+
+
+
+
+# Create VPC
 resource "aws_vpc" "vpc" {
-  cidr_block = "10.10.0.0/16"
+  cidr_block           = "10.10.0.0/16"
+  enable_dns_support   = true
+  enable_dns_hostnames = true
   tags = {
-    Name = "${local.env}-VPC"
+Name = "${local.env}-VPC"
   }
 }
 
-# Subnet
-resource "aws_subnet" "subnet" {
-  vpc_id     = aws_vpc.vpc.id
-  cidr_block = "10.10.10.0/24"
+# Create Public Subnet
+resource "aws_subnet" "public_subnet" {
+  vpc_id                  = aws_vpc.vpc.id
+  cidr_block              = "10.10.1.0/24"
+  map_public_ip_on_launch = true
+  availability_zone       = "us-west-2a"
   tags = {
-    Name = "${local.env}-Subnet"
+    Name = "${local.env}Public-Subnet"
   }
 }
+
+# Create Internet Gateway
+resource "aws_internet_gateway" "igw" {
+  vpc_id = aws_vpc.vpc.id
+  tags = {
+    Name = "Internet-Gateway"
+  }
+}
+
+# Create Route Table
+resource "aws_route_table" "public_rt" {
+  vpc_id = aws_vpc.vpc.id
+  tags = {
+    Name = "Public-Route-Table"
+  }
+}
+
+# Associate Route Table with Subnet
+resource "aws_route_table_association" "public_rt_assoc" {
+  subnet_id      = aws_subnet.public_subnet.id
+  route_table_id = aws_route_table.public_rt.id
+}
+
+# Add Route to Internet Gateway in Route Table
+resource "aws_route" "public_route" {
+  route_table_id         = aws_route_table.public_rt.id
+  destination_cidr_block = "0.0.0.0/0"
+  gateway_id             = aws_internet_gateway.igw.id
+}
+
+# Create Security Group
+resource "aws_security_group" "allow_all_sg" {
+  vpc_id = aws_vpc.vpc.id
+  name   = "Allow-All-Traffic"
+
+  ingress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "Allow-All-Traffic"
+  }
+}
+
 
 # EC2 Instances
 resource "aws_instance" "ec2" {
