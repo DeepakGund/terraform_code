@@ -106,7 +106,7 @@ resource "aws_instance" "ec2" {
     type        = "ssh"
     user        = "ec2-user"
     host        = self.public_ip # Use the instance's public IP
-    private_key = file("~/.ssh/us-west-02.pem")
+    private_key = file("~/.ssh/devops.pem")
   }
 
   provisioner "remote-exec" {
