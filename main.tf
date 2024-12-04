@@ -8,7 +8,7 @@ terraform {
 }
 
 locals {
-  env = "Terraform"
+  env = "DEV-SEC-OPS"
 }
 
 variable "instance_types" {
