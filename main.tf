@@ -100,7 +100,7 @@ resource "aws_instance" "ec2" {
   tags = {
     Name = "${local.env}-Server-${count.index + 1}"
   }
-
+/.
   # Configure SSH access and install packages
   connection {
     type        = "ssh"
@@ -108,7 +108,7 @@ resource "aws_instance" "ec2" {
     host        = self.public_ip # Use the instance's public IP
     private_key = file("~/.ssh/devops.pem")
   }
-
+./
   provisioner "remote-exec" {
     inline = [
       "sudo yum update -y",
